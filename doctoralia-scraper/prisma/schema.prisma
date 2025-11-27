@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model doctors {
+  id                 BigInt                @id @default(autoincrement())
+  full_name          String
+  specialty          String
+  city               String
+  address            String?
+  phone_country_code String?               @db.VarChar(8)
+  phone_number       String?               @db.VarChar(32)
+  rating             Decimal?              @db.Decimal(10, 2)
+  review_count       Int?
+  source_profile_url String
+  appointments       appointments[]
+  availability       doctor_availability[]
+  treatments         treatments[]
+}
+
+model treatments {
+  id               BigInt         @id @default(autoincrement())
+  doctor_id        BigInt
+  name             String
+  price            Decimal?       @db.Decimal(10, 2)
+  currency         String?        @db.Char(3)
+  duration_minutes Int?           @db.SmallInt
+  appointments     appointments[]
+  doctor           doctors        @relation(fields: [doctor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([doctor_id, name], map: "ux_treatments_doctor_name")
+}
+
+model doctor_availability {
+  id        BigInt         @id @default(autoincrement())
+  doctor_id BigInt
+  start_at  DateTime       @db.Timestamptz(6)
+  end_at    DateTime       @db.Timestamptz(6)
+  modality  visit_modality
+  doctor    doctors        @relation(fields: [doctor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([doctor_id], map: "idx_doctor_availability_doctor_id")
+  @@index([start_at], map: "idx_doctor_availability_start_at")
+}
+
+model patients {
+  id              BigInt         @id @default(autoincrement())
+  full_name       String
+  document_number String?        @db.VarChar(32)
+  phone_number    String?        @db.VarChar(32)
+  email           String?
+  appointments    appointments[]
+}
+
+model appointments {
+  id           BigInt             @id @default(autoincrement())
+  doctor_id    BigInt
+  patient_id   BigInt
+  treatment_id BigInt
+  start_at     DateTime           @db.Timestamptz(6)
+  end_at       DateTime           @db.Timestamptz(6)
+  status       appointment_status @default(scheduled)
+  doctor       doctors            @relation(fields: [doctor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient      patients           @relation(fields: [patient_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  treatment    treatments         @relation(fields: [treatment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([doctor_id], map: "idx_appointments_doctor_id")
+  @@index([patient_id], map: "idx_appointments_patient_id")
+  @@index([start_at], map: "idx_appointments_start_at")
+  @@index([treatment_id], map: "idx_appointments_treatment_id")
+}
+
+enum appointment_status {
+  scheduled
+  completed
+  cancelled
+}
+
+enum visit_modality {
+  in_person
+  online
+}

@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16
+    container_name: doctoralia_db
+    environment:
+      POSTGRES_USER: clinic_user
+      POSTGRES_PASSWORD: clinic_pass
+      POSTGRES_DB: clinic_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      # OPCIONAL: inicializa con tu DDL exacto
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clinic_user -d clinic_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  scraper:
+    build: .
+    container_name: doctoralia_scraper
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://clinic_user:clinic_pass@db:5432/clinic_db?schema=clinic"
+      CONCURRENCY: 5
+      DELAY_MS: 600
+      MAX_PAGES_PER_SEED: 150
+      BASE_URL: "https://www.doctoralia.pe"
+    restart: "no"
+
+volumes:
+  db_data:
