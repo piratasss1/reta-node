@@ -101,3 +101,22 @@ El contenedor de Docker ya viene preconfigurado en `docker-compose.yml`. Las var
 - `CONCURRENCY`: Número de tareas simultáneas (default: 5).
 - `DELAY_MS`: Retraso entre peticiones para evitar bloqueos (default: 600ms).
 - `MAX_PAGES_PER_SEED`: Límite de páginas a scrapear por especialidad/servicio.
+
+
+
+# Inconvenientes y Observaciones al Obtener Datos de Doctoralia
+
+Durante el desarrollo del scraper se presentaron varios retos y limitaciones al momento de obtener los datos:
+
+1. **Tiempo de carga de los datos**  
+   Algunos valores, especialmente los **precios (`price`) y nombres de doctores**, dependían del tiempo de carga de la página. Esto hizo que la obtención de datos fuera más lenta y requería esperar a que la información estuviera disponible antes de leerla.
+
+2. **Especialidades con doctores repetidos**  
+   En algunos casos, dentro de una misma especialidad, los doctores tenían el **mismo nombre**, lo que dificultaba la identificación única de cada profesional.
+
+3. **Horarios de atención**  
+   Los horarios eran especialmente complicados de obtener porque la página utilizaba **scroll dinámico**. Cada vez que se hacía scroll, se cargaban nuevos datos que la librería de scraping no captaba automáticamente, lo que imposibilitaba obtener todos los horarios de manera completa.
+
+4. **Logs de errores**  
+   Dentro de los logs aparecen líneas con `Error fetch`, que indican que **ese doctor no tiene horarios disponibles** en la página. Esto no significa que haya un fallo en el scraper, sino que la información simplemente no está disponible en la web.
+
