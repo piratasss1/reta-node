@@ -51,7 +51,6 @@ export async function scrapeListPage(
 
   const list: DoctorCard[] = [];
   const uniqueKeys = new Set<string>(); // evita duplicados
-  logger.info("CCCCCCCCCCCCCC", cards.length)
   for (const card of cards) {
     const body = $(card).find("div.card-body.p-0");
     const details = body.find("[data-test-id='result-items-details']");
